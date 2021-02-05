@@ -7,7 +7,7 @@ class Sensors:
         self.sensors = ['temp', 'humid', 'pressure']
         self.DHT_SENSOR = Adafruit_DHT.DHT22
         self.DHT_PIN = 27 #array of answers/sensors/database tables (they match exactly)
-        answers = {'temp':None, 'humid':None, 'pressure':None}
+        self.answers = {'temp':None, 'humid':None, 'pressure':None}
         
     def populateAnswers(self):
         self.readTempHumid()
