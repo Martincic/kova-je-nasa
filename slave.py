@@ -55,13 +55,14 @@ def listen(self, Sensors):
 
     nrf.listen = False  # put the nRF24L01 in TX mode + Standby-I power state
 
+
+Sensors = Sensors()
 if __name__ == "__main__":
 
-    global Sensors = Sensors()
     try:
         while True:
             Sensors.populateAnswers()
-            listen(Sensors)
+            listen()
             
     except KeyboardInterrupt:
         print(" Keyboard Interrupt detected. Powering down radio...")
