@@ -67,6 +67,7 @@ if __name__ == "__main__":
             for question in questions:
                 answer = askQuestion(question)
                 Connection.storeValue(question, answer)
+                print(question, answer)
             time.sleep(5)
                 
     except KeyboardInterrupt:
