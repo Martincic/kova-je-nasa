@@ -21,9 +21,12 @@ class Database:
             
             now = datetime.now()
             sql = "INSERT INTO "+table+" (value, created_at) VALUES (%s, %s)"
-            val = (value, now)
-            
-            cursor.execute(sql, val)
+            val = (str(value), now)
+            try:
+                cursor.execute(sql, val)
+            except mysql.connector.errors.DataError:
+                conn.close()
+                return
             conn.commit()
             conn.close()
         except KeyboardInterrupt:

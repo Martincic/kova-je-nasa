@@ -1,8 +1,8 @@
 import time
 import board
 import digitalio
-from circuitpython_nrf24l01.rf24 import RF24
 from Database import Database
+from circuitpython_nrf24l01.rf24 import RF24
 
 # change these (digital output) pins accordingly
 ce = digitalio.DigitalInOut(board.D4)
@@ -23,7 +23,7 @@ nrf.pa_level = -12
 address = [b"1Node", b"2Node"]
 
 #using bool so TX and RX can switch with simple not
-radio_number = False
+radio_number = True
 
 # set TX address of RX node into the TX pipe
 nrf.open_tx_pipe(address[radio_number])  # always uses pipe 0
@@ -32,46 +32,52 @@ nrf.open_tx_pipe(address[radio_number])  # always uses pipe 0
 nrf.open_rx_pipe(1, address[not radio_number])  # using pipe 1
 
 def askQuestion(question, count=5):  # count = times question is asked
-    nrf.listen = False  #TX mode enabled
+    nrf.listen = False  # ensures the nRF24L01 is in TX mode
     while count:
-        # convert question into bytes
+        # construct a payload to send
         buffer = bytes(question, 'utf-8')
-        start_timer = time.monotonic_ns()  # start timer
-        answer = nrf.send(buffer)  # save the answer (ACK payload)
+        answer = nrf.send(buffer)  # save the response (ACK payload)
         if not answer:
-            pass
-            #print("send() failed or timed out")
-        else:  # question asked, listen for a response
+            print("send() failed or timed out")
+        else:  # sent successful; listen for a response
             nrf.listen = True  # switch to RX mode 
-            timeout = time.monotonic_ns() + 200000000  # set sentinal for timeout (nanoseconds)
+            timeout = time.monotonic_ns() + 200000000  # set timeout 200ms
             while not nrf.available() and time.monotonic_ns() < timeout:
-                # this loop hangs for 200 ms or until response is received
+                # this loop hangs until response is received or timed out
                 pass
-            nrf.listen = False  # put the radio back in TX mode
-            end_timer = time.monotonic_ns()  # stop timer
-            
+            nrf.listen = False # switch to TX mode 
+            print(
+                "Transmission successful! Sent: {}?".format(
+                    buffer.decode("utf-8")
+                ),
+                end=" ",
+            )
             if nrf.pipe is None:  # is there a payload?
                 print("Received no response.")
             else:
-                answer = nrf.read()  # grab & return the response
-                return answer.decode('utf-8')
+                length = nrf.any()
+                pipe_number = nrf.pipe
+                received = nrf.read()  # grab the response & return it
+                print("Receieved: {}".format(bytes(received).decode("utf-8")))
+                return received
         count -= 1
-        time.sleep(1)
-        
+
+
 if __name__ == "__main__":
-    
     #array of questions/sensors/database tables (they match exactly)
     questions = ['temp', 'humid', 'pressure'] 
     Connection = Database() #init database class
-    
     try:
         while True:
             for question in questions:
-                answer = askQuestion(question)
-                Connection.storeValue(question, answer)
-                print(question, answer)
-            time.sleep(5)
-                
+                try:
+                    answer = askQuestion(question)
+                    answer = answer.decode("utf-8")
+                    Connection.storeValue(question, answer)
+                except AttributeError:
+                    pass
+            time.sleep(5) 
     except KeyboardInterrupt:
         print(" Keyboard Interrupt detected. Powering down radio...")
         nrf.power = False
+

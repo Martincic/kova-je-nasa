@@ -1,14 +1,7 @@
-"""
-Example of using the library manually send Acknowledgement (ACK)
-messages without using the nRF24L01's ACK payloads feature.
-"""
 import time
 import board
 import digitalio
 from Sensors import Sensors
-
-# if running this on a ATSAMD21 M0 based board
-# from circuitpython_nrf24l01.rf24_lite import RF24
 from circuitpython_nrf24l01.rf24 import RF24
 
 # change these (digital output) pins accordingly
@@ -40,66 +33,6 @@ nrf.open_tx_pipe(address[radio_number])  # always uses pipe 0
 # set RX address of TX node into an RX pipe
 nrf.open_rx_pipe(1, address[not radio_number])  # using pipe 1
 # nrf.open_rx_pipe(2, address[radio_number])  # for getting responses on pipe 2
-
-# using the python keyword global is bad practice. Instead we'll use a 1 item
-# list to store our integer number for the payloads' counter
-counter = [0]
-
-# uncomment the following 3 lines for compatibility with TMRh20 library
-# nrf.allow_ask_no_ack = False
-# nrf.dynamic_payloads = False
-# nrf.payload_length = 8
-
-
-def master(count=5):  # count = 5 will only transmit 5 packets
-    """Transmits an arbitrary unsigned long value every second"""
-    nrf.listen = False  # ensures the nRF24L01 is in TX mode
-    while count:
-        # construct a payload to send
-        # add b"\0" as a c-string NULL terminating char
-        buffer = b"Hello \0" + bytes([counter[0]])
-        start_timer = time.monotonic_ns()  # start timer
-        result = nrf.send(buffer)  # save the response (ACK payload)
-        if not result:
-            print("send() failed or timed out")
-        else:  # sent successful; listen for a response
-            nrf.listen = True  # get radio ready to receive a response
-            timeout = time.monotonic_ns() + 200000000  # set sentinal for timeout
-            while not nrf.available() and time.monotonic_ns() < timeout:
-                # this loop hangs for 200 ms or until response is received
-                pass
-            nrf.listen = False  # put the radio back in TX mode
-            end_timer = time.monotonic_ns()  # stop timer
-            print(
-                "Transmission successful! Time to transmit: "
-                "{} us. Sent: {}{}".format(
-                    int((end_timer - start_timer) / 1000),
-                    buffer[:6].decode("utf-8"),
-                    counter[0],
-                ),
-                end=" ",
-            )
-            if nrf.pipe is None:  # is there a payload?
-                # nrf.pipe is also updated using `nrf.listen = False`
-                print("Received no response.")
-            else:
-                length = nrf.any()  # reset with read()
-                pipe_number = nrf.pipe  # reset with read()
-                received = nrf.read()  # grab the response
-                # save new counter from response
-                counter[0] = received[7:8][0]
-                print(
-                    "Receieved {} bytes with pipe {}: {}{}".format(
-                        length,
-                        pipe_number,
-                        bytes(received[:6]).decode("utf-8"),  # convert to str
-                        counter[0],
-                    )
-                )
-        count -= 1
-        # make example readable in REPL by slowing down transmissions
-        time.sleep(1)
-
 
 def slave(timeout=6):
     """Polls the radio and prints the received value. This method expires
@@ -137,43 +70,6 @@ def slave(timeout=6):
     nrf.listen = False  # put the nRF24L01 in TX mode + Standby-I power state
 
 
-def set_role():
-    """Set the role using stdin stream. Timeout arg for slave() can be
-    specified using a space delimiter (e.g. 'R 10' calls `slave(10)`)
-
-    :return:
-        - True when role is complete & app should continue running.
-        - False when app should exit
-    """
-    user_input = (
-        input(
-            "*** Enter 'R' for receiver role.\n"
-            "*** Enter 'T' for transmitter role.\n"
-            "*** Enter 'Q' to quit example.\n"
-        )
-        or "?"
-    )
-    user_input = user_input.split()
-    if user_input[0].upper().startswith("R"):
-        if len(user_input) > 1:
-            slave(int(user_input[1]))
-        else:
-            slave()
-        return True
-    if user_input[0].upper().startswith("T"):
-        if len(user_input) > 1:
-            master(int(user_input[1]))
-        else:
-            master()
-        return True
-    if user_input[0].upper().startswith("Q"):
-        nrf.power = False
-        return False
-    print(user_input[0], "is an unrecognized input. Please try again.")
-    return set_role()
-
-
-
 Sensors = Sensors()
 if __name__ == "__main__":
     try:
@@ -183,5 +79,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print(" Keyboard Interrupt detected. Powering down radio...")
         nrf.power = False
-else:
-    print("    Run slave() on receiver\n    Run master() on transmitter")
+
