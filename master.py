@@ -31,33 +31,36 @@ nrf.open_tx_pipe(address[radio_number])  # always uses pipe 0
 # set RX address of TX node into an RX pipe
 nrf.open_rx_pipe(1, address[not radio_number])  # using pipe 1
 
-def askQuestion(question, count=5):  # count = 5 will only ask 5 times (send 5 packets containing question)
-    nrf.listen = False  # put radio in TX mode
-
+def askQuestion(question, count=5):  # count = times question is asked
+    nrf.listen = False  #TX mode enabled
     while count:
-        # construct a payload to send, convert question to bytes and encode w/ utf-8
+        # convert question into bytes
         buffer = bytes(question, 'utf-8')
-        answer = nrf.send(buffer)  # send question and save the response (ACK payload)
-        
-        if answer:#check if we recieved an answer
-            if isinstance(answer, bool): #check if answer is empty
-                print(" Received an empty ACK packet")
-            else:
-                #print and return the answer
-                print(answer.decode("utf-8"))
-                return answer
-        
-        #if there is no answer wait and ask again counter times
-        elif not answer:
+        start_timer = time.monotonic_ns()  # start timer
+        answer = nrf.send(buffer)  # save the answer (ACK payload)
+        if not answer:
             print("send() failed or timed out")
-            time.sleep(0.2)  # let the RX node prepare a new ACK payload
-            count -= 1
+        else:  # question asked, listen for a response
+            nrf.listen = True  # switch to RX mode 
+            timeout = time.monotonic_ns() + 200000000  # set sentinal for timeout (nanoseconds)
+            while not nrf.available() and time.monotonic_ns() < timeout:
+                # this loop hangs for 200 ms or until response is received
+                pass
+            nrf.listen = False  # put the radio back in TX mode
+            end_timer = time.monotonic_ns()  # stop timer
             
-    
+            if nrf.pipe is None:  # is there a payload?
+                print("Received no response.")
+            else:
+                answer = nrf.read()  # grab & return the response
+                return answer
+        count -= 1
+
 if __name__ == "__main__":
     
-    questions = ['temp'] #array of sensors
-    Connection = Database(); #init database class
+    #array of questions/sensors/database tables (they match exactly)
+    questions = ['temp', 'humid', 'pressure'] 
+    Connection = Database() #init database class
     
     try:
         while True:
