@@ -53,7 +53,7 @@ def askQuestion(question, count=5):  # count = times question is asked
                 print("Received no response.")
             else:
                 answer = nrf.read()  # grab & return the response
-                return answer
+                return answer.decode('utf-8')
         count -= 1
 
 if __name__ == "__main__":

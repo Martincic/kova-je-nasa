@@ -18,7 +18,9 @@ class Sensors:
             if humidity is not None and temperature is not None:
                 self.answers['temp'] = temperature
                 self.answers['humid'] = humidity
+#                print("Temp:", self.getAnswer('temp'))
+ #               print("Humid:", self.getAnswer('humid'))
                 
     def getAnswer(self, question):
-        return answers[question]
+        return str(self.answers[question])[0:5]
             
