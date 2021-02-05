@@ -39,7 +39,8 @@ def askQuestion(question, count=5):  # count = times question is asked
         start_timer = time.monotonic_ns()  # start timer
         answer = nrf.send(buffer)  # save the answer (ACK payload)
         if not answer:
-            print("send() failed or timed out")
+            pass
+            #print("send() failed or timed out")
         else:  # question asked, listen for a response
             nrf.listen = True  # switch to RX mode 
             timeout = time.monotonic_ns() + 200000000  # set sentinal for timeout (nanoseconds)
@@ -55,7 +56,8 @@ def askQuestion(question, count=5):  # count = times question is asked
                 answer = nrf.read()  # grab & return the response
                 return answer.decode('utf-8')
         count -= 1
-
+        time.sleep(1)
+        
 if __name__ == "__main__":
     
     #array of questions/sensors/database tables (they match exactly)

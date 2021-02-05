@@ -13,7 +13,7 @@ class Sensors:
         self.readTempHumid()
         
     def readTempHumid(self):
-        for x in range(10): #DHT is not constant output
+        for x in range(3): #DHT is not constant output
             humidity, temperature = Adafruit_DHT.read(self.DHT_SENSOR, self.DHT_PIN)
             if humidity is not None and temperature is not None:
                 self.answers['temp'] = temperature
