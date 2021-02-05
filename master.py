@@ -49,17 +49,22 @@ def askQuestion(question, count=5):  # count = 5 will only ask 5 times (send 5 p
         #if there is no answer wait and ask again counter times
         elif not answer:
             print("send() failed or timed out")
-            time.sleep(1)  # let the RX node prepare a new ACK payload
+            time.sleep(0.5)  # let the RX node prepare a new ACK payload
             count -= 1
 
-
+def storeValue(value, column):
+    
+    
+    
 if __name__ == "__main__":
     try:
         questions = ['temp', 'humidity', 'pressure']
         
         while True:
             for question in questions:
-                answer = askQuestion(question);
+                answer = askQuestion(question)
+                storeValue(answer, question)
+                time.sleep(5)
                 
     except KeyboardInterrupt:
         print(" Keyboard Interrupt detected. Powering down radio...")
