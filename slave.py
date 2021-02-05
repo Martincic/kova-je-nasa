@@ -57,7 +57,7 @@ def listen(self, Sensors):
 
 if __name__ == "__main__":
 
-    Sensors = Sensors()
+    global Sensors = Sensors()
     try:
         while True:
             Sensors.populateAnswers()
