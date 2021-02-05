@@ -22,5 +22,7 @@ class Sensors:
  #               print("Humid:", self.getAnswer('humid'))
                 
     def getAnswer(self, question):
-        return str(self.answers[question])[0:6]
-            
+        try:
+            return str(self.answers[question])[0:6]
+        except KeyError:
+            pass
