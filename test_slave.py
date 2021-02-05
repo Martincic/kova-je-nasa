@@ -46,15 +46,22 @@ def slave(timeout=6):
             received = nrf.read(length)  # clears info from any() and nrf.pipe
             # increment counter before sending it back in responding payload
             nrf.listen = False  # put the radio in TX mode
-            question = False
+            result = False
             ack_timeout = time.monotonic_ns() + 200000000
-            while not question and time.monotonic_ns() < ack_timeout:
+            while not result and time.monotonic_ns() < ack_timeout:
                 # try to send reply for 200 milliseconds (at most)
-                question = nrf.send(bytes(Sensors.getAnswer(question), 'utf-8'))
+                result = nrf.send(bytes(Sensors.getAnswer(question), 'utf-8'))
             nrf.listen = True  # put the radio back in RX mode
             print(
-                "Received: {} Sent:{}".format(received.decode("utf-8"),Sensors.getAnswer(question),),end=" ",)
-            if not question:
+                "Received {} on pipe {}: {}{} Sent:".format(
+                    length,
+                    pipe,
+                    bytes(received).decode("utf-8"),  # convert to str
+                    received,
+                ),
+                end=" ",
+            )
+            if not result:
                 print("Response failed or timed out")
             start_timer = time.monotonic()  # reset timeout
 
