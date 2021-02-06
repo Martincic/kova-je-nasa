@@ -4,6 +4,8 @@ Example of library usage for streaming multiple payloads.
 import time
 import board
 import digitalio
+import io
+import sys
 
 # if running this on a ATSAMD21 M0 based board
 # from circuitpython_nrf24l01.rf24_lite import RF24
@@ -20,6 +22,7 @@ spi = board.SPI()  # init spi bus object
 # we'll be using the dynamic payload size feature (enabled by default)
 # initialize the nRF24L01 on the spi bus object
 nrf = RF24(spi, csn, ce)
+nrf.dynamic_payloads = True
 
 # set the Power Amplifier level to -12 dBm since this test example is
 # usually run with nRF24L01 transceivers in close proximity
@@ -48,20 +51,22 @@ nrf.open_rx_pipe(1, address[not radio_number])  # using pipe 1
 
 def make_buffers(size=32):
     """return a list of payloads"""
-    buffers = []
     # we'll use `size` for the number of payloads in the list and the
     # payloads' length
-    for i in range(size):
-        # prefix payload with a sequential letter to indicate which
-        # payloads were lost (if any)
-        buff = bytes([i + (65 if 0 <= i < 26 else 71)])
-        for j in range(size - 1):
-            char = j >= (size - 1) / 2 + abs((size - 1) / 2 - i)
-            char |= j < (size - 1) / 2 - abs((size - 1) / 2 - i)
-            buff += bytes([char + 48])
-        buffers.append(buff)
-        del buff
+    buffers = []
+    with open("coal.jpeg", "rb") as image:
+      f = image.read()
+      b = bytearray(f)
+      print(b)
+      print(b[0])
+      
+    counter = 0
+    while counter < sys.getsizeof(b):
+        counter += 31
+        if not counter > sys.getsizeof(b):
+            buffers.append(b[counter:counter+31])
     return buffers
+    
 
 
 def master(count=1, size=32):  # count = 5 will transmit the list 5 times
