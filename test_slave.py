@@ -39,12 +39,14 @@ def slave(timeout=6):
             length = nrf.any()  # grab payload length info
             pipe = nrf.pipe  # grab pipe number info
             received = nrf.read(length)  # clears info from any() and nrf.pipe
+            question = received.decode('utf-8')
             nrf.listen = False  # put the radio in TX mode
             result = False
             ack_timeout = time.monotonic_ns() + 200000000
             while not result and time.monotonic_ns() < ack_timeout:
                 # try to send reply for 200 milliseconds (at most)
-                result = nrf.send(b"World \0" + bytes([counter[0]]))
+                answer = bytes(Sensors.getAnswer(question), 'utf-8')
+                result = nrf.send(answer)
             nrf.listen = True  # put the radio back in RX mode
             print(
                 "Received {} on pipe {}: {} Sent:".format(
@@ -61,10 +63,11 @@ def slave(timeout=6):
     # recommended behavior is to keep in TX mode when in idle
     nrf.listen = False  # put the nRF24L01 in TX mode + Standby-I power state
 
-
+Sensors = Sensors()
 if __name__ == "__main__":
     try:
         while True:
+            Sensors.populateAnswers()
             slave()  # continue example until 'Q' is entered
     except KeyboardInterrupt:
         print(" Keyboard Interrupt detected. Powering down radio...")
