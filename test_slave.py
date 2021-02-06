@@ -1,8 +1,8 @@
 import time
 import board
 import digitalio
-from Sensors import Sensors
 from circuitpython_nrf24l01.rf24 import RF24
+from Sensors import Sensors
 
 # change these (digital output) pins accordingly
 ce = digitalio.DigitalInOut(board.D17)
@@ -12,29 +12,26 @@ csn = digitalio.DigitalInOut(board.D16)
 # available SPI pins, board.SCK, board.MOSI, board.MISO
 spi = board.SPI()  # init spi bus object
 
-# initialize the nRF24L01 on the spi bus object
 nrf = RF24(spi, csn, ce)
 
-# set the Power Amplifier level to -12 dBm since this test example is
-# usually run with nRF24L01 transceivers in close proximity
+nrf.ack = True  # enable ack upon recieving packets
+
+#set power level 
 nrf.pa_level = -12
 
 # addresses needs to be in a buffer protocol object (bytearray)
 address = [b"1Node", b"2Node"]
 
-# to use different addresses on a pair of radios, we need a variable to
-# uniquely identify which address this radio will use to transmit
-# 0 uses address[0] to transmit, 1 uses address[1] to transmit
-radio_number = False
+#using bool so TX and RX can switch with simple not
+radio_number = True
 
 # set TX address of RX node into the TX pipe
 nrf.open_tx_pipe(address[radio_number])  # always uses pipe 0
 
 # set RX address of TX node into an RX pipe
 nrf.open_rx_pipe(1, address[not radio_number])  # using pipe 1
-# nrf.open_rx_pipe(2, address[radio_number])  # for getting responses on pipe 2
 
-def slave(timeout=6):
+def listen(timeout=6):
     """Polls the radio and prints the received value. This method expires
     after 6 seconds of no received transmission"""
     nrf.listen = True  # put radio into RX mode and power up
@@ -42,19 +39,22 @@ def slave(timeout=6):
     while (time.monotonic() - start_timer) < timeout:
         if nrf.available():
             length = nrf.any()  # grab payload length info
-            pipe = nrf.pipe  # grab pipe number info
             received = nrf.read(length)  # clears info from any() and nrf.pipe
-            # increment counter before sending it back in responding payload
             nrf.listen = False  # put the radio in TX mode
-            question = False
+            result = False
             ack_timeout = time.monotonic_ns() + 200000000
-            while not question and time.monotonic_ns() < ack_timeout:
+            while not result and time.monotonic_ns() < ack_timeout:
                 # try to send reply for 200 milliseconds (at most)
-                question = nrf.send(bytes(Sensors.getAnswer(question), 'utf-8'))
+                answer = sensors.getAnswer(result.decode('utf-8'))
+                result = nrf.send(bytes(answer, 'utf-8'))
             nrf.listen = True  # put the radio back in RX mode
             print(
-                "Received: {} Sent:{}".format(received.decode("utf-8"),Sensors.getAnswer(question),),end=" ",)
-            if not question:
+                "Received {} Sent: {}".format(
+                    received.decode('utf-8'),
+                    answer),
+                end=" ",
+            )
+            if not result:
                 print("Response failed or timed out")
             start_timer = time.monotonic()  # reset timeout
 
@@ -62,13 +62,14 @@ def slave(timeout=6):
     nrf.listen = False  # put the nRF24L01 in TX mode + Standby-I power state
 
 
-Sensors = Sensors()
+sensors = Sensors()
 if __name__ == "__main__":
     try:
         while True:
-            Sensors.populateAnswers()
-            slave()
+            sensors.populateAnswers()
+            listen()  # continue example until 'Q' is entered
     except KeyboardInterrupt:
         print(" Keyboard Interrupt detected. Powering down radio...")
         nrf.power = False
-
+else:
+    print("    Run slave() on receiver\n    Run master() on transmitter")
