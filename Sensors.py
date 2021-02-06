@@ -1,5 +1,7 @@
 import RPi.GPIO as GPIO
 import Adafruit_DHT
+import sys
+from time import sleep
 
 class Sensors:
     def __init__(self):
@@ -10,9 +12,14 @@ class Sensors:
         
     def populateAnswers(self):
         self.readTempHumid()
+        print(self.answers)
+        #self.readPressure()
+        #self.takeAPhoto()
+        #etc..
         
     def readTempHumid(self):
-        for x in range(10): #DHT is not constant output
+        for x in range(5): #DHT is not constant output
+            sleep(0.1)
             humidity, temperature = Adafruit_DHT.read(self.DHT_SENSOR, self.DHT_PIN)
             if humidity is not None and temperature is not None:
                 self.answers['temp'] = temperature
@@ -22,6 +29,6 @@ class Sensors:
                 
     def getAnswer(self, question):
         try:
-            return str(self.answers[question])[0:6]
+            return str(self.answers[question])
         except KeyError:
             pass
