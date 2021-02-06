@@ -4,6 +4,9 @@ Example of library usage for streaming multiple payloads.
 import time
 import board
 import digitalio
+import os
+import io
+import PIL.Image as Image
 
 # if running this on a ATSAMD21 M0 based board
 # from circuitpython_nrf24l01.rf24_lite import RF24
@@ -141,6 +144,8 @@ def master_fifo(count=1, size=32):
 
 def slave(timeout=5):
     """Stops listening after a `timeout` with no response"""
+    byteArray = bytearray()
+    newFile = open("image.bin", "a")
     nrf.listen = True  # put radio into RX mode and power up
     count = 0  # keep track of the number of received payloads
     start_timer = time.monotonic()  # start timer
@@ -150,12 +155,17 @@ def slave(timeout=5):
             # retreive the received packet's payload
             buffer = nrf.read()  # clears flags & empties RX FIFO
             print("Received: {} - {}".format(buffer, count))
+            bytearray.append(buffer)
             start_timer = time.monotonic()  # reset timer on every RX payload
 
     # recommended behavior is to keep in TX mode while idle
     nrf.listen = False  # put the nRF24L01 is in TX mode
+    newFile.write(bytearray)
 
-
+def readimage(path):
+    count = os.stat(path).st_size / 2
+    with open
+    
 def set_role():
     """Set the role using stdin stream. Timeout arg for slave() can be
     specified using a space delimiter (e.g. 'R 10' calls `slave(10)`)
