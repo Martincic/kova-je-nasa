@@ -23,7 +23,7 @@ nrf.pa_level = -12
 address = [b"1Node", b"2Node"]
 
 #using bool so TX and RX can switch with simple not
-radio_number = True
+radio_number = False
 
 # set TX address of RX node into the TX pipe
 nrf.open_tx_pipe(address[radio_number])  # always uses pipe 0
@@ -31,13 +31,13 @@ nrf.open_tx_pipe(address[radio_number])  # always uses pipe 0
 # set RX address of TX node into an RX pipe
 nrf.open_rx_pipe(1, address[not radio_number])  # using pipe 1
 
-def master(count=5):  # count = 5 will only transmit 5 packets
+def askQuestion(question, count=5):  # count = times question is asked
     """Transmits an arbitrary unsigned long value every second"""
     nrf.listen = False  # ensures the nRF24L01 is in TX mode
     while count:
         # construct a payload to send
         # add b"\0" as a c-string NULL terminating char
-        buffer = b"Hello \0" + bytes([counter[0]])
+        buffer = bytes(question, 'utf-8')
         start_timer = time.monotonic_ns()  # start timer
         result = nrf.send(buffer)  # save the response (ACK payload)
         if not result:
@@ -52,10 +52,9 @@ def master(count=5):  # count = 5 will only transmit 5 packets
             end_timer = time.monotonic_ns()  # stop timer
             print(
                 "Transmission successful! Time to transmit: "
-                "{} us. Sent: {}{}".format(
+                "{} us. Sent: {}".format(
                     int((end_timer - start_timer) / 1000),
-                    buffer[:6].decode("utf-8"),
-                    counter[0],
+                    buffer.decode("utf-8"),
                 ),
                 end=" ",
             )
@@ -65,26 +64,33 @@ def master(count=5):  # count = 5 will only transmit 5 packets
             else:
                 length = nrf.any()  # reset with read()
                 pipe_number = nrf.pipe  # reset with read()
-                received = nrf.read()  # grab the response
+                received = nrf.read()  # grab the response & return it
                 # save new counter from response
-                counter[0] = received[7:8][0]
                 print(
-                    "Receieved {} bytes with pipe {}: {}{}".format(
+                    "Receieved {} bytes with pipe {}: {}".format(
                         length,
                         pipe_number,
-                        bytes(received[:6]).decode("utf-8"),  # convert to str
-                        counter[0],
-                    )
-                )
+                        bytes(received).decode("utf-8")))
+                return received
         count -= 1
         # make example readable in REPL by slowing down transmissions
         time.sleep(1)
 
 
 if __name__ == "__main__":
+    #array of questions/sensors/database tables (they match exactly)
+    questions = ['temp', 'humid', 'pressure'] 
+    Connection = Database() #init database class
     try:
         while True:
-            master()  # continue example until 'Q' is entered
+            for question in questions:
+                try:
+                    answer = askQuestion(question)
+                    answer = answer.decode("utf-8")
+                    Connection.storeValue(question, answer)
+                except AttributeError:
+                    pass
+            time.sleep(5) 
     except KeyboardInterrupt:
         print(" Keyboard Interrupt detected. Powering down radio...")
         nrf.power = False
