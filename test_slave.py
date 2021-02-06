@@ -36,7 +36,7 @@ def slave(timeout=6):
     nrf.listen = True  # put radio into RX mode and power up
     start_timer = time.monotonic()  # used as a timeout
     while (time.monotonic() - start_timer) < timeout:
-        humidity = random.randrange(0,100)
+        humidity, temp = Sensors.readTempHumid()
         if nrf.available():
             length = nrf.any()  # grab payload length info
             pipe = nrf.pipe  # grab pipe number info
