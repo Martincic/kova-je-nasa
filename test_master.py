@@ -51,11 +51,7 @@ def askQuestion(question, count=5):  # count = times question is asked
             nrf.listen = False  # put the radio back in TX mode
             end_timer = time.monotonic_ns()  # stop timer
             print(
-                "Transmission successful! Time to transmit: "
-                "{} us. Sent: {}".format(
-                    int((end_timer - start_timer) / 1000),
-                    buffer.decode("utf-8"),
-                ),
+                "Transmission successful! Sent: {}".format(buffer.decode("utf-8"),),
                 end=" ",
             )
             if nrf.pipe is None:  # is there a payload?
@@ -67,9 +63,7 @@ def askQuestion(question, count=5):  # count = times question is asked
                 received = nrf.read()  # grab the response & return it
                 # save new counter from response
                 print(
-                    "Receieved {} bytes with pipe {}: {}".format(
-                        length,
-                        pipe_number,
+                    "Receieved {} ".format(
                         bytes(received).decode("utf-8")))
                 return received
         count -= 1
