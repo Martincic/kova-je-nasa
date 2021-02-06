@@ -4,7 +4,6 @@ import Adafruit_DHT
 class Sensors:
     def __init__(self):
         GPIO.setmode(GPIO.BCM)
-        self.sensors = ['temp', 'humid', 'pressure']
         self.DHT_SENSOR = Adafruit_DHT.DHT22
         self.DHT_PIN = 27 #array of answers/sensors/database tables (they match exactly)
         self.answers = {'temp':None, 'humid':None, 'pressure':None}

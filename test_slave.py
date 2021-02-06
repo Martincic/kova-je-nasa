@@ -31,7 +31,7 @@ nrf.open_tx_pipe(address[radio_number])  # always uses pipe 0
 # set RX address of TX node into an RX pipe
 nrf.open_rx_pipe(1, address[not radio_number])  # using pipe 1
 
-def listen(timeout=6):
+def slave(timeout=6):
     """Polls the radio and prints the received value. This method expires
     after 6 seconds of no received transmission"""
     nrf.listen = True  # put radio into RX mode and power up
@@ -39,35 +39,40 @@ def listen(timeout=6):
     while (time.monotonic() - start_timer) < timeout:
         if nrf.available():
             length = nrf.any()  # grab payload length info
+            pipe = nrf.pipe  # grab pipe number info
             received = nrf.read(length)  # clears info from any() and nrf.pipe
+            # increment counter before sending it back in responding payload
+            counter[0] = received[7:8][0] + 1
             nrf.listen = False  # put the radio in TX mode
             result = False
             ack_timeout = time.monotonic_ns() + 200000000
             while not result and time.monotonic_ns() < ack_timeout:
                 # try to send reply for 200 milliseconds (at most)
-                answer = sensors.getAnswer(result.decode('utf-8'))
-                result = nrf.send(bytes(answer, 'utf-8'))
+                result = nrf.send(b"World \0" + bytes([counter[0]]))
             nrf.listen = True  # put the radio back in RX mode
             print(
-                "Received {} Sent: {}".format(
-                    received.decode('utf-8'),
-                    answer),
+                "Received {} on pipe {}: {}{} Sent:".format(
+                    length,
+                    pipe,
+                    bytes(received[:6]).decode("utf-8"),  # convert to str
+                    received[7:8][0],
+                ),
                 end=" ",
             )
             if not result:
                 print("Response failed or timed out")
+            else:
+                print("World", counter[0])
             start_timer = time.monotonic()  # reset timeout
 
     # recommended behavior is to keep in TX mode when in idle
     nrf.listen = False  # put the nRF24L01 in TX mode + Standby-I power state
 
 
-sensors = Sensors()
 if __name__ == "__main__":
     try:
         while True:
-            sensors.populateAnswers()
-            listen()  # continue example until 'Q' is entered
+            slave()  # continue example until 'Q' is entered
     except KeyboardInterrupt:
         print(" Keyboard Interrupt detected. Powering down radio...")
         nrf.power = False
