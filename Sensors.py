@@ -12,7 +12,6 @@ class Sensors:
         
     def populateAnswers(self):
         self.readTempHumid()
-        print(self.answers)
         #self.readPressure()
         #self.takeAPhoto()
         #etc..
@@ -24,9 +23,6 @@ class Sensors:
             if humidity is not None and temperature is not None:
                 self.answers['temp'] = temperature
                 self.answers['humid'] = humidity
-#                print("Temp:", self.getAnswer('temp'))
- #               print("Humid:", self.getAnswer('humid'))
-        return humidity, temperature
 
     def getAnswer(self, question):
         try:
