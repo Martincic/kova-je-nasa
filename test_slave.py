@@ -36,7 +36,7 @@ def slave(timeout=6):
     nrf.listen = True  # put radio into RX mode and power up
     start_timer = time.monotonic()  # used as a timeout
     while (time.monotonic() - start_timer) < timeout:
-        humidity, temp = Sensors.readTempHumid()
+        Sensors.populateAnswers()
         if nrf.available():
             length = nrf.any()  # grab payload length info
             pipe = nrf.pipe  # grab pipe number info
@@ -44,10 +44,10 @@ def slave(timeout=6):
             question = received.decode('utf-8')
             nrf.listen = False  # put the radio in TX mode
             result = False
-            ack_timeout = time.monotonic_ns() + 200000000
+            ack_timeout = time.monotonic_ns() + 1000000000
             while not result and time.monotonic_ns() < ack_timeout:
                 # try to send reply for 200 milliseconds (at most)
-                answer = bytes(str(humidity), 'utf-8')
+                answer = bytes(Sensors.getAnswer(question), 'utf-8')
                 result = nrf.send(answer)
             nrf.listen = True  # put the radio back in RX mode
             print(
