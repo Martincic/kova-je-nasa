@@ -23,7 +23,7 @@ nrf.pa_level = -12
 address = [b"1Node", b"2Node"]
 
 #using bool so TX and RX can switch with simple not
-radio_number = True
+radio_number = False
 
 # set TX address of RX node into the TX pipe
 nrf.open_tx_pipe(address[radio_number])  # always uses pipe 0
@@ -32,35 +32,44 @@ nrf.open_tx_pipe(address[radio_number])  # always uses pipe 0
 nrf.open_rx_pipe(1, address[not radio_number])  # using pipe 1
 
 def askQuestion(question, count=5):  # count = times question is asked
+    """Transmits an arbitrary unsigned long value every second"""
     nrf.listen = False  # ensures the nRF24L01 is in TX mode
     while count:
         # construct a payload to send
+        # add b"\0" as a c-string NULL terminating char
         buffer = bytes(question, 'utf-8')
-        answer = nrf.send(buffer)  # save the response (ACK payload)
-        if not answer:
+        start_timer = time.monotonic_ns()  # start timer
+        result = nrf.send(buffer)  # save the response (ACK payload)
+        if not result:
             print("send() failed or timed out")
         else:  # sent successful; listen for a response
-            nrf.listen = True  # switch to RX mode 
-            timeout = time.monotonic_ns() + 200000000  # set timeout 200ms
+            nrf.listen = True  # get radio ready to receive a response
+            timeout = time.monotonic_ns() + 1000000000  # set sentinal for timeout
             while not nrf.available() and time.monotonic_ns() < timeout:
-                # this loop hangs until response is received or timed out
+                # this loop waits 1s for slave to read data and send back
                 pass
-            nrf.listen = False # switch to TX mode 
-            print(
-                "Transmission successful! Sent: {}?".format(
-                    buffer.decode("utf-8")
-                ),
-                end=" ",
-            )
+            nrf.listen = False  # put the radio back in TX mode
+            end_timer = time.monotonic_ns()  # stop timer
+            
             if nrf.pipe is None:  # is there a payload?
-                print("Received no response.")
+                # nrf.pipe is also updated using `nrf.listen = False`
+                pass
             else:
-                length = nrf.any()
-                pipe_number = nrf.pipe
+                print(
+                "Transmission successful! Sent: {}".format(buffer.decode("utf-8"),),
+                end=" ",
+                )
+                length = nrf.any()  # reset with read()
+                pipe_number = nrf.pipe  # reset with read()
                 received = nrf.read()  # grab the response & return it
-                print("Receieved: {}".format(bytes(received).decode("utf-8")))
+                # save new counter from response
+                print(
+                    "Receieved {} ".format(
+                        bytes(received).decode("utf-8")))
                 return received
         count -= 1
+        # make example readable in REPL by slowing down transmissions
+        time.sleep(1)
 
 
 if __name__ == "__main__":
@@ -80,4 +89,6 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print(" Keyboard Interrupt detected. Powering down radio...")
         nrf.power = False
+else:
+    print("    Run slave() on receiver\n    Run master() on transmitter")
 
