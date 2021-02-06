@@ -26,7 +26,8 @@ class Sensors:
                 self.answers['humid'] = humidity
 #                print("Temp:", self.getAnswer('temp'))
  #               print("Humid:", self.getAnswer('humid'))
-                
+        return humidity, temperature
+
     def getAnswer(self, question):
         try:
             return str(self.answers[question])

@@ -3,6 +3,7 @@ import board
 import digitalio
 from circuitpython_nrf24l01.rf24 import RF24
 from Sensors import Sensors
+import random
 
 # change these (digital output) pins accordingly
 ce = digitalio.DigitalInOut(board.D17)
@@ -35,6 +36,7 @@ def slave(timeout=6):
     nrf.listen = True  # put radio into RX mode and power up
     start_timer = time.monotonic()  # used as a timeout
     while (time.monotonic() - start_timer) < timeout:
+        humidity = random.randrange(0,100)
         if nrf.available():
             length = nrf.any()  # grab payload length info
             pipe = nrf.pipe  # grab pipe number info
@@ -45,19 +47,19 @@ def slave(timeout=6):
             ack_timeout = time.monotonic_ns() + 200000000
             while not result and time.monotonic_ns() < ack_timeout:
                 # try to send reply for 200 milliseconds (at most)
-                answer = bytes(Sensors.getAnswer(question), 'utf-8')
+                answer = bytes(str(humidity), 'utf-8')
                 result = nrf.send(answer)
             nrf.listen = True  # put the radio back in RX mode
             print(
-                "Received {} on pipe {}: {} Sent:".format(
-                    length,
-                    pipe,
-                    bytes(received).decode("utf-8")
+                "Received {} Sent: {}".format(
+                    bytes(received).decode("utf-8"),
+                    answer.decode('utf-8'),
                 ),
-                end=" ",
+                end=" ", flush=True
             )
+            print("", flush=True)
             if not result:
-                print("Response failed or timed out")
+                print("Response failed or timed out", flush=True)
             start_timer = time.monotonic()  # reset timeout
 
     # recommended behavior is to keep in TX mode when in idle
