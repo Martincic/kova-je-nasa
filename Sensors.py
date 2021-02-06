@@ -18,15 +18,13 @@ class Sensors:
         #etc..
         
     def readTempHumid(self):
-        for x in range(3):
-            time.sleep(0.1)
-            humidity, temperature = Adafruit_DHT.read(self.DHT_SENSOR, self.DHT_PIN)
-            if humidity is not None and temperature is not None:
-                self.answers['temp'] = temperature
-                self.answers['humid'] = humidity
+        humidity, temperature = Adafruit_DHT.read(self.DHT_SENSOR, self.DHT_PIN)
+        if humidity is not None and temperature is not None:
+            self.answers['temp'] = temperature
+            self.answers['humid'] = humidity
 #                print("Temp:", self.getAnswer('temp'))
  #               print("Humid:", self.getAnswer('humid'))
-            return humidity, temperature
+        return humidity, temperature
 
     def getAnswer(self, question):
         try:

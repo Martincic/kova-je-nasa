@@ -44,9 +44,9 @@ def askQuestion(question, count=5):  # count = times question is asked
             print("send() failed or timed out")
         else:  # sent successful; listen for a response
             nrf.listen = True  # get radio ready to receive a response
-            timeout = time.monotonic_ns() + 1000000000  # set sentinal for timeout
+            timeout = time.monotonic_ns() + 200000000  # set sentinal for timeout
             while not nrf.available() and time.monotonic_ns() < timeout:
-                # this loop waits 1s for slave to read data and send back
+                # this loop hangs for 200 ms or until response is received
                 pass
             nrf.listen = False  # put the radio back in TX mode
             end_timer = time.monotonic_ns()  # stop timer
