@@ -6,6 +6,7 @@ import board
 import digitalio
 import io
 import sys
+import binascii
 
 # if running this on a ATSAMD21 M0 based board
 # from circuitpython_nrf24l01.rf24_lite import RF24
@@ -56,15 +57,16 @@ def make_buffers(size=32):
     buffers = []
     with open("coal.jpeg", "rb") as image:
       f = image.read()
-      b = bytearray(f)
-      print(b)
-      print(b[0])
+      
+      b = bytearray(binascii.hexlify(f))
+      #print(b)
+      #print(b[0])
       
     counter = 0
     while counter < sys.getsizeof(b):
-        counter += 31
+        counter += 30
         if not counter > sys.getsizeof(b):
-            buffers.append(b[counter:counter+31])
+            buffers.append(b[counter:counter+30])
     return buffers
     
 
