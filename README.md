@@ -18,4 +18,4 @@ daljnja referenca na web stranici.
 
 ## Pinout
 
-![alt text](https://github.com/Martincic/kova-je-nasa/blob/main/pinout.jpg?raw=true)
+![alt text](https://github.com/Martincic/kova-je-nasa/blob/main/pinout.png?raw=true)
