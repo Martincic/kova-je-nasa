@@ -15,3 +15,7 @@ sa raznih senzora poput temperature, vlage, tlaka itd.
 Glavni je na vrhu rudnika i svako malo zove podređenog i traži podatke kojima
 rob odgovara odgovorom. Glavni sprema podatke u bazu podataka koja će se koristiti za kao
 daljnja referenca na web stranici.
+
+## Pinout
+
+![alt text](https://github.com/Martincic/kova-je-nasa/blob/main/pinout.jpg?raw=true)
