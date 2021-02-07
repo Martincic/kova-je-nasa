@@ -161,26 +161,11 @@ def slave(timeout=5):
 
     # recommended behavior is to keep in TX mode while idle
     nrf.listen = False  # put the nRF24L01 is in TX mode
-    f = open('image.bin', 'wb')
-    f.write(bytes)
+    print(bytes[0:32])
+    f = open('image.jpeg', 'wb')
+    f.write(binascii.unhexlify(bytes))
     f.close()
-    picture_hex = open('image.bin').read()
-
-# Convert hex to binary data
-    picture_bytes = binascii.unhexlify(picture_hex)
-
-# Convert bytes to stream (file-like object in memory)
-    picture_stream = io.BytesIO(picture_bytes)
-
-# Create Image object
-    picture = PIL.Image.open(picture_stream)
-
-#display image
-    picture.show()
-
-# print whether JPEG, PNG, etc.
-    print(picture.format)
-    
+   
 def set_role():
     """Set the role using stdin stream. Timeout arg for slave() can be
     specified using a space delimiter (e.g. 'R 10' calls `slave(10)`)
