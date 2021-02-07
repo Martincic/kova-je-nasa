@@ -162,7 +162,7 @@ def slave(timeout=5):
     # recommended behavior is to keep in TX mode while idle
     nrf.listen = False  # put the nRF24L01 is in TX mode
     print(bytes[0:32])
-    f = open('image.jpeg', 'wb')
+    f.open("image.jpeg")
     f.write(binascii.unhexlify(bytes))
     f.close()
    
