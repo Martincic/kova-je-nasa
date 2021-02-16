@@ -1,6 +1,7 @@
 import time
 import board
 import digitalio
+import requests
 from Database import Database
 from circuitpython_nrf24l01.rf24 import RF24
 
@@ -63,14 +64,21 @@ def askQuestion(question, count=5):  # count = times question is asked
                 pipe_number = nrf.pipe  # reset with read()
                 received = nrf.read()  # grab the response & return it
                 # save new counter from response
-                print(
-                    "Receieved {} ".format(
-                        bytes(received).decode("utf-8")))
-                return received
+                try:
+                    print(
+                        "Receieved {} ".format(
+                            bytes(received).decode("utf-8")))
+                    return received
+                except UnicodeDecodeError:
+                    return 0
         count -= 1
         # make example readable in REPL by slowing down transmissions
         time.sleep(1)
 
+def sendRequest(column, value):
+    url = "https://level52.live/upload.php"
+    json = {'key': 'keyGoesHere!!',column:value}  #dont forget to set ur key
+    x = requests.post(url, data = json)
 
 if __name__ == "__main__":
     #array of questions/sensors/database tables (they match exactly)
@@ -83,8 +91,11 @@ if __name__ == "__main__":
                     answer = askQuestion(question)
                     answer = answer.decode("utf-8")
                     Connection.storeValue(question, answer)
+                    if answer is not None:
+                        sendRequest(question, answer)
                 except AttributeError:
                     pass
+            #Send data to server
             time.sleep(5) 
     except KeyboardInterrupt:
         print(" Keyboard Interrupt detected. Powering down radio...")
