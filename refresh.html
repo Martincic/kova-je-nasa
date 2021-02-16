@@ -1,0 +1,27 @@
+<!DOCTYPE html> <html>
+  
+<head> 
+    <title> 
+        How to call a function
+        repeatedly every 5  
+        seconds in JavaScript ? 
+    </title> 
+</head> 
+  
+<body> 
+    <img src="image.jpeg"></img>
+      
+    <script> 
+        var timer; 
+          
+        function startTimer() { 
+            timer = setInterval(function() {  
+                location.reload()
+            }, 5000); 
+        } 
+          
+        startTimer();
+    </script> 
+</body> 
+  
+</html> 

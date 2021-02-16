@@ -6,9 +6,10 @@ import board
 import digitalio
 import os
 import io
-import PIL.Image as Image
 import PIL
 import binascii
+from PIL import ImageFile, Image
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 # if running this on a ATSAMD21 M0 based board
 # from circuitpython_nrf24l01.rf24_lite import RF24
 from circuitpython_nrf24l01.rf24 import RF24
@@ -146,7 +147,9 @@ def master_fifo(count=1, size=32):
 def slave(timeout=5):
     """Stops listening after a `timeout` with no response"""
     bytes = b''
-    newFile = open("image.bin", "a")
+    
+    f = open("image.jpeg", 'wb')
+    
     nrf.listen = True  # put radio into RX mode and power up
     count = 0  # keep track of the number of received payloads
     start_timer = time.monotonic()  # start timer
@@ -157,13 +160,15 @@ def slave(timeout=5):
             buffer = nrf.read()  # clears flags & empties RX FIFO
             print("Received: {} - {}".format(buffer, count))
             bytes += buffer
+            print(binascii.unhexlify(buffer))
+            f.write(binascii.unhexlify(buffer))
+            if count%1000 == 0:
+                pass
             start_timer = time.monotonic()  # reset timer on every RX payload
 
     # recommended behavior is to keep in TX mode while idle
     nrf.listen = False  # put the nRF24L01 is in TX mode
-    print(bytes[0:32])
-    f.open("image.jpeg")
-    f.write(binascii.unhexlify(bytes))
+    print(bytes[0:64])
     f.close()
    
 def set_role():
@@ -219,6 +224,10 @@ print("    nRF24L01 Stream test")
 
 if __name__ == "__main__":
     try:
+        
+        image = Image.open("image.jpeg")
+        image.show()
+        
         while set_role():
             pass  # continue example until 'Q' is entered
     except KeyboardInterrupt:
