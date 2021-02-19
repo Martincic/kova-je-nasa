@@ -77,7 +77,7 @@ def askQuestion(question, count=5):  # count = times question is asked
 
 def sendRequest(column, value):
     url = "https://level52.live/upload.php"
-    json = {'key': 'keyGoesHere!!',column:value}  #dont forget to set ur key
+    json = {'key': 'Xp2s5v8y/B?E(G+KbPeShVmYq3t6w9z$',column:value}  #dont forget to set ur key
     x = requests.post(url, data = json)
 
 if __name__ == "__main__":
