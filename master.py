@@ -1,9 +1,12 @@
 import time
 import board
 import digitalio
-import requests
+import busio
+import adafruit_mcp9808
+import adafruit_bmp280
 from Database import Database
 from circuitpython_nrf24l01.rf24 import RF24
+from adafruit_htu21d import HTU21D
 
 # change these (digital output) pins accordingly
 ce = digitalio.DigitalInOut(board.D4)
@@ -31,6 +34,22 @@ nrf.open_tx_pipe(address[radio_number])  # always uses pipe 0
 
 # set RX address of TX node into an RX pipe
 nrf.open_rx_pipe(1, address[not radio_number])  # using pipe 1
+
+#init I2C
+i2c_bus = None
+mcp = None
+bmp280 = None
+sht21 = None
+try:
+    i2c_bus = busio.I2C(board.SCL, board.SDA)
+    #Initialise mcp, bmp & sht21
+    mcp = adafruit_mcp9808.MCP9808(i2c_bus)
+    bmp280 = adafruit_bmp280.Adafruit_BMP_I2C(i2c_bus)
+    sht21 = HTU21D(i2c_bus)
+    bmp280.sea_level_pressure = 1027.25
+except ValueError:
+    print("No I2C device found")
+#calibrate bmp280
 
 def askQuestion(question, count=5):  # count = times question is asked
     """Transmits an arbitrary unsigned long value every second"""
@@ -64,21 +83,14 @@ def askQuestion(question, count=5):  # count = times question is asked
                 pipe_number = nrf.pipe  # reset with read()
                 received = nrf.read()  # grab the response & return it
                 # save new counter from response
-                try:
-                    print(
-                        "Receieved {} ".format(
-                            bytes(received).decode("utf-8")))
-                    return received
-                except UnicodeDecodeError:
-                    return 0
+                print(
+                    "Receieved {} ".format(
+                        bytes(received).decode("utf-8")))
+                return received
         count -= 1
         # make example readable in REPL by slowing down transmissions
         time.sleep(1)
 
-def sendRequest(column, value):
-    url = "https://level52.live/upload.php"
-    json = {'key': 'Xp2s5v8y/B?E(G+KbPeShVmYq3t6w9z$',column:value}  #dont forget to set ur key
-    x = requests.post(url, data = json)
 
 if __name__ == "__main__":
     #array of questions/sensors/database tables (they match exactly)
@@ -91,11 +103,18 @@ if __name__ == "__main__":
                     answer = askQuestion(question)
                     answer = answer.decode("utf-8")
                     Connection.storeValue(question, answer)
-                    if answer is not None:
-                        sendRequest(question, answer)
                 except AttributeError:
                     pass
-            #Send data to server
+            try:
+                print("MCP Temp: %0.1f C" % mcp.temperature)
+                print("BMP Temp: %0.1f C" % bmp280.temperature)
+                print("BMP Pressure: %0.1f hPa" % bmp280.pressure)
+                print("BMP Altitude: %0.1f m" % bmp280.altitude)
+                print("SHT21 Temp: %0.1f C" % sht21.temperature)
+                print("SHT21 Humid: %0.1f C" % sht21.relative_humidity)
+            except:
+                print("Error reading i2c sensors")
+                
             time.sleep(5) 
     except KeyboardInterrupt:
         print(" Keyboard Interrupt detected. Powering down radio...")
