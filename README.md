@@ -19,4 +19,5 @@ daljnja referenca na web stranici.
 ## Pinout
 
 **NOTE: Slave.py is using CE as pin 17 and CSN as pin 16 (because I fryed my GPIO4) This can be changed in line 16 and 17**
+
 ![alt text](https://github.com/Martincic/kova-je-nasa/blob/main/pinout.png?raw=true)
