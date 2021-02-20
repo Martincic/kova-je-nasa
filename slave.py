@@ -18,7 +18,7 @@ nrf = RF24(spi, csn, ce)
 nrf.ack = True  # enable ack upon recieving packets
 
 #set power level 
-nrf.pa_level = -12
+nrf.pa_level = 0
 
 # addresses needs to be in a buffer protocol object (bytearray)
 address = [b"1Node", b"2Node"]
